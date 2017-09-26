@@ -4,6 +4,7 @@ class BasicTerminalView( View ):
     def __init__( self ):
         View.__init__( self )
         
+        
     def display_menu( self, menu ):
         if menu.title is not None:
             print menu.title
