@@ -5,3 +5,9 @@ class Store:
     """
     def __init__( self ):
         pass
+
+    def load_users( self ):
+        pass
+    
+    def save_users( self, users ):
+        pass
