@@ -1,8 +1,15 @@
+from basicterminalview import BasicTerminalView
 
 class View:
     """
-    Interface to the view being used
+    Baseclass for supported views
     """
     def __init__( self ):
-        self.impl = None
+        pass
+    
+    def display_menu( self, menu ):
+        """
+        Display the menu and return (success, input, menuitem_or_failure_reason)
+        """
+        return (False, "", "Not implemented")
         
