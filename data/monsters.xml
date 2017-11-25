@@ -1,0 +1,73 @@
+<monsters>
+    <monster id="1" name="Goblin" level="1" reaction="30" attack="1">
+        <description>A weak and pathetic goblin.</description>
+        <problem>What is 1 + 1?</problem>
+        <solution>2</solution>
+        <checker>MATCH_EXACT</checker>
+    </monster>
+    
+    <monster id="2" name="Goblin" level="1" reaction="30" attack="1">
+        <description>A weak and pathetic goblin.</description>
+        <problem>What starts with 'e', ends with 'e', and has only one letter in it?</problem>
+        <solution>Envelope</solution>
+        <keywords>
+            <keyword>envelope</keyword>
+        </keywords>
+        <checker>MATCH_KEYWORDS</checker>
+        <hints>
+            <hint>"letter" may have multiple meanings</hint>
+        </hints>
+        <nextMonster></nextMonster>
+    </monster>
+    
+    <monster id="3" name="Orc" level="1" reaction="120" attack="2">
+        <description></description>
+        <problem>
+            Solve:
+               A   B   C    D   E   F    G   H   I
+            =========================================
+          1 ||   |   |   ||   |   |   ||   |   |   ||
+            -----------------------------------------
+          2 ||   |   |   ||   |   |   ||   |   |   ||
+            -----------------------------------------
+          3 ||   |   |   ||   |   |   ||   |   |   ||
+            =========================================
+          4 ||   |   |   ||   |   |   ||   |   |   ||
+            -----------------------------------------
+          5 ||   |   |   ||   |   |   ||   |   |   ||
+            -----------------------------------------
+          6 ||   |   |   ||   |   |   ||   |   |   ||
+            =========================================
+          7 ||   |   |   ||   |   |   ||   |   |   ||
+            -----------------------------------------
+          8 ||   |   |   ||   |   |   ||   |   |   ||
+            -----------------------------------------
+          9 ||   |   |   ||   |   |   ||   |   |   ||
+            =========================================
+        </problem>
+        <solution>
+               A   B   C    D   E   F    G   H   I
+            =========================================
+          1 ||   |   |   ||   |   |   ||   |   |   ||
+            -----------------------------------------
+          2 ||   |   |   ||   |   |   ||   |   |   ||
+            -----------------------------------------
+          3 ||   |   |   ||   |   |   ||   |   |   ||
+            =========================================
+          4 ||   |   |   ||   |   |   ||   |   |   ||
+            -----------------------------------------
+          5 ||   |   |   ||   |   |   ||   |   |   ||
+            -----------------------------------------
+          6 ||   |   |   ||   |   |   ||   |   |   ||
+            =========================================
+          7 ||   |   |   ||   |   |   ||   |   |   ||
+            -----------------------------------------
+          8 ||   |   |   ||   |   |   ||   |   |   ||
+            -----------------------------------------
+          9 ||   |   |   ||   |   |   ||   |   |   ||
+            =========================================
+        </solution>
+        <checker>
+        </checker>
+    </monster>
+</monsters>

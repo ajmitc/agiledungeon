@@ -1,4 +1,5 @@
 from store import Store
+import threading
 
 class FlatFileStore( Store ):
     USER_FILE = "user.txt"
@@ -8,10 +9,19 @@ class FlatFileStore( Store ):
     
     def __init__( self ):
         Store.__init__( self )
+        self.users_lock = threading.RLock()
+        self.items_lock = threading.RLock()
+        self.games_lock = threading.RLock()
+        self.monsters_lock = threading.RLock()
         
     ################################################################
     # User
     ################################################################
+    def lock_users( self ):
+        self.users_lock.acquire()
+        
+    def unlock_users( self ):
+        self.users_lock.release()
     
     def load_users( self ):
         users = []
@@ -54,7 +64,12 @@ class FlatFileStore( Store ):
     ################################################################
     # Items
     ################################################################
-    
+    def lock_items( self ):
+        self.items_lock.acquire()
+        
+    def unlock_items( self ):
+        self.items_lock.release()
+        
     def load_items( self ):
         items = []
         fd = open( self.ITEM_FILE, "r" )
@@ -91,7 +106,12 @@ class FlatFileStore( Store ):
     ################################################################
     # Monsters
     ################################################################
-    
+    def lock_monsters( self ):
+        self.monsters_lock.acquire()
+        
+    def unlock_monsters( self ):
+        self.monsters_lock.release()
+        
     def load_monsters( self ):
         monsters = []
         fd = open( self.MONSTER_FILE, "r" )
@@ -127,7 +147,12 @@ class FlatFileStore( Store ):
     ################################################################
     # Games
     ################################################################
-    
+    def lock_games( self ):
+        self.games_lock.acquire()
+        
+    def unlock_games( self ):
+        self.games_lock.release()
+        
     def load_games( self ):
         games = []
         fd = open( self.GAME_FILE, "r" )
@@ -155,8 +180,24 @@ class FlatFileStore( Store ):
 
     def __write_game_line( self, fd, game ):
         fields = [
+            game.id,
             game.name,
-            # TODO Add other game fields
+            game.visibility,
+            self.__get_dungeon_fields( game.dungeon ),
+            self.__get_hero_fields( game.heros )
         ]
         fd.write( "|".join( fields ) )
+        
+        
+    def __get_dungeon_fields( self, dungeon ):
+        fields = [
+            str(dungeon.depth),
+        ]
+        # TODO Add rooms
+        return ""
+    
+    def __get_hero_fields( self, heros ):
+        # TODO Implement this
+        return ""
+    
     

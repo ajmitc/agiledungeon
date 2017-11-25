@@ -1,4 +1,3 @@
-from basicterminalview import BasicTerminalView
 
 class View:
     """
@@ -12,4 +11,11 @@ class View:
         Display the menu and return (success, input, menuitem_or_failure_reason)
         """
         return (False, "", "Not implemented")
+    
+    
+    def populate_new_game_fields( self, newDungeon ):
+        pass
+    
+    def close( self ):
+        pass
         

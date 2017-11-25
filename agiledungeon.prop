@@ -1,0 +1,4 @@
+manager.host = box-codeanywhere
+manager.port = 9875
+manager.username = ajmitc
+manager.password = password

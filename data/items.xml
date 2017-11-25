@@ -1,0 +1,93 @@
+<items>
+    <item name="Fists" level="0">
+        <equip_locations>
+            <equip_location>PRIMARY_HAND</equip_location>
+        </equip_locations>
+        <carriable_by>
+            <hero>ANY</hero>
+        </carriable_by>
+    </item>
+    <item name="Short Sword" level="1">
+        <equip_locations>
+            <equip_location>PRIMARY_HAND</equip_location>
+        </equip_locations>
+        <carriable_by>
+            <hero>ANY</hero>
+        </carriable_by>
+    </item>
+    <item name="Broad Sword" level="2">
+        <equip_locations>
+            <equip_location>PRIMARY_HAND</equip_location>
+        </equip_locations>
+        <carriable_by>
+            <hero>ANY</hero>
+        </carriable_by>
+    </item>
+    <item name="Long Sword" level="3">
+        <equip_locations>
+            <equip_location>PRIMARY_HAND</equip_location>
+        </equip_locations>
+        <carriable_by>
+            <hero>BARBARIAN</hero>
+        </carriable_by>
+    </item>
+    <item name="Small Wooden Shield" level="1">
+        <equip_locations>
+            <equip_location>SECONDARY_HAND</equip_location>
+        </equip_locations>
+        <carriable_by>
+            <hero>ANY</hero>
+        </carriable_by>
+    </item>
+    <item name="Medium Wooden Shield" level="2">
+        <equip_locations>
+            <equip_location>SECONDARY_HAND</equip_location>
+        </equip_locations>
+        <carriable_by>
+            <hero>ANY</hero>
+        </carriable_by>
+    </item>
+    <item name="Large Wooden Shield" level="3">
+        <equip_locations>
+            <equip_location>SECONDARY_HAND</equip_location>
+        </equip_locations>
+        <carriable_by>
+            <hero>ANY</hero>
+        </carriable_by>
+    </item>
+    <item name="Small Iron Shield" level="2">
+        <equip_locations>
+            <equip_location>SECONDARY_HAND</equip_location>
+        </equip_locations>
+        <carriable_by>
+            <hero>BARBARIAN</hero>
+            <hero>DWARF</hero>
+            <hero>ELF</hero>
+        </carriable_by>
+    </item>
+    <item name="Medium Iron Shield" level="3">
+        <equip_locations>
+            <equip_location>SECONDARY_HAND</equip_location>
+        </equip_locations>
+        <carriable_by>
+            <hero>BARBARIAN</hero>
+            <hero>DWARF</hero>
+        </carriable_by>
+    </item>
+    <item name="Large Iron Shield" level="4">
+        <equip_locations>
+            <equip_location>SECONDARY_HAND</equip_location>
+        </equip_locations>
+        <carriable_by>
+            <hero>BARBARIAN</hero>
+        </carriable_by>
+    </item>
+    <item name="Staff" level="1">
+        <equip_locations>
+            <equip_location>PRIMARY_HAND</equip_location>
+        </equip_locations>
+        <carriable_by>
+            <hero>ANY</hero>
+        </carriable_by>
+    </item>
+</items>
