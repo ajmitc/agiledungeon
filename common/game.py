@@ -5,8 +5,9 @@ from hero.elf import Elf
 from hero.dwarf import Dwarf
 from hero.wizard import Wizard
 from hero.hero import Hero
+import xml_util
 
-class Game:
+class Game( object ):
     VISIBILITY_PUBLIC = "public"
     VISIBILITY_PRIVATE = "private"
     
@@ -19,11 +20,12 @@ class Game:
         self.dungeon = Dungeon()
         self.heros = {
             Hero.BARBARIAN: Barbarian(),
-            Hero.DWARF: Dwarf().
+            Hero.DWARF: Dwarf(),
             Hero.ELF: Elf(),
             Hero.WIZARD: Wizard()
         }
         self.visibility = self.VISIBILITY_PUBLIC
+        self.accessible_users = []  # List of usernames that can join this game (only valid if visibility == private)
         self.name = "Game"
         
         
@@ -34,9 +36,19 @@ class Game:
         monsterfactory = xml_util.load_monsters( self.MONSTERS_FILENAME )
         itemfactory = xml_util.load_items( self.ITEMS_FILENAME )
         self.dungeon.build( roomfactory, monsterfactory, itemfactory )
-        for hero in self.heros:
-        	hero.reset( items )
-    
+        print "Resetting Heroes"
+        for hero in self.heros.values():
+        	hero.reset( itemfactory )
+
+
+    def from_str( self, s ):
+        self.id, dungeon, barbarian, dwarf, elf, wizard = s.split( ";" )
+        self.dungeon.from_str( dungeon )
+        self.heros[ Hero.BARBARIAN ].from_str( barbarian )
+        self.heros[ Hero.DWARF ].from_str( dwarf )
+        self.heros[ Hero.ELF ].from_str( elf )
+        self.heros[ Hero.WIZARD ].from_str( wizard )
+
     
     def __str__( self ):
     	fields = [
@@ -48,3 +60,4 @@ class Game:
             str(self.heros[ Hero.WIZARD ])
         ]
         return ";".join( fields )
+

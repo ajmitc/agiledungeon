@@ -1,8 +1,10 @@
 import socket
 import traceback
 import threading
+import time
 from menu.mainmenu import MainMenu
 from view.basicterminalview import BasicTerminalView
+from common.game import Game
 from common.protocol.proto_command import ProtocolCommand
 from common.protocol.protocol import parse_command
 from common.util import *
@@ -16,11 +18,14 @@ class ManagerRecvThread( threading.Thread ):
         self.callback_obj = callback_obj
         
     def run( self ):
+        self.callback_obj.sock.settimeout( 0.5 )
         while not self._stop:
             inp = None
             try:
                 inp = self.callback_obj.sock.recv( 4096 )
                 self.callback_obj.handle_manager_response( inp )
+            except socket.timeout:
+                continue
             except Exception, e:
                 traceback.print_exc()
     
@@ -29,7 +34,9 @@ class AgileDungeonClient:
     PROPERTIES_FILE = "agiledungeon.prop"
 	
     def __init__( self ):
-        self.sock = None
+        self._stop        = False
+        self.do_debug     = True
+        self.sock         = None
         self.manager_host = "localhost"
         self.manager_port = 0
         self.props = {
@@ -45,6 +52,11 @@ class AgileDungeonClient:
         self.games = None
         self.resp_cond = threading.Condition()
         self.waiting_for_response = False
+
+
+    def debug( self, text ):
+        if self.do_debug:
+            print "[DEBUG] %s" % text
         
         
     def run( self ):
@@ -58,12 +70,16 @@ class AgileDungeonClient:
         # Login to manager
         self.recvthread.start()
         self.login()
+        # Wait for login response -> on_login_successful()
         
         
     def on_login_successful( self ):
         # Retrieve game list
         self.get_game_list( True )
         
+
+
+    def display_mainmenu( self ):
         mainmenu = MainMenu( self )
         while not self._stop and not mainmenu.exit_menu:
             success, inp, selection_or_reason = self.view.display_menu( mainmenu )
@@ -71,7 +87,15 @@ class AgileDungeonClient:
                 print selection_or_reason
                 continue
             selection_or_reason.callback( inp )
+        self.debug( "Exited mainmenu loop" )
+        self._stop = True
+        self.recvthread._stop = True
+        # Sleep to let command receiver thread to exit
+        time.sleep( 0.6 )
+        self.sock.close()
+
             
+
             
     def get_manager_connection( self ):
     	done = False
@@ -191,6 +215,7 @@ class AgileDungeonClient:
                 game = Game()
                 game.from_str( arg )
             	self.games.append( game )
+            self.display_mainmenu()
         elif resp.command == ProtocolCommand.RNEWGAME:
             success = resp.args[ 0 ]
             game_id_or_reason = resp.args[ 1 ]
@@ -208,7 +233,7 @@ class AgileDungeonClient:
             
             
     def get_game_list( self, wait=False ):
-        print "Getting game list"
+        self.debug( "Getting game list" )
     	getGameList = ProtocolCommand( ProtocolCommand.GETGAMES )
         getGameList.hash = self.hash
         self.games = None
@@ -226,7 +251,7 @@ class AgileDungeonClient:
     def create_new_dungeon( self ):
         newDungeon = ProtocolCommand( ProtocolCommand.NEWGAME )
         newDungeon.hash = self.hash
-        exiting_names = [ game.name.lower() for game in self.games ]
+        existing_names = [ game.name.lower() for game in self.games ]
         newDungeon = self.view.populate_new_game_fields( newDungeon, existing_names )
         self.send_command( newDungeon )
     

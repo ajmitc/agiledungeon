@@ -14,7 +14,7 @@ class User:
         
     def renew_hash( self ):
         self.hash = str(uuid.uuid4())
-        self.session_exp = datetime.utcnow() + timedelta( second=self.SESSION_DURATION )
+        self.session_exp = datetime.utcnow() + timedelta( seconds=self.SESSION_DURATION )
         
         
     def login( self, username, password ):

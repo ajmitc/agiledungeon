@@ -1,5 +1,10 @@
 from store import Store
+from manager.user.user import User
+from common.game import Game
+from common.item.item import Item
+from common.dungeon.monster import Monster
 import threading
+from datetime import datetime
 
 class FlatFileStore( Store ):
     USER_FILE = "user.txt"
@@ -45,8 +50,8 @@ class FlatFileStore( Store ):
         username, password, hash, sessionexp, lastlogin = line.split( "|" )
         user = User( username, password )
         user.hash = hash if hash != "" else None
-        user.session_exp = sessionexp.strptime( "%Y-%m-%d %H:%M:%S" ) if sessionexp != "" else None
-        user.last_login = lastlogin.strptime( "%Y-%m-%d %H:%M:%S" ) if lastlogin != "" else None
+        user.session_exp = datetime.strptime( sessionexp, "%Y-%m-%d %H:%M:%S" ) if sessionexp != "" else None
+        user.last_login = datetime.strptime( lastlogin, "%Y-%m-%d %H:%M:%S" ) if lastlogin != "" else None
         return user
     
 
@@ -55,7 +60,7 @@ class FlatFileStore( Store ):
             user.username,
             user.password,
             user.hash if user.hash is not None else "",
-            user.session_exp.stftime( "%Y-%m-%d %H:%M:%S" ) if user.session_exp is not None else "",
+            user.session_exp.strftime( "%Y-%m-%d %H:%M:%S" ) if user.session_exp is not None else "",
             user.last_login.strftime( "%Y-%m-%d %H:%M:%S" ) if user.last_login is not None else ""
         ]
         fd.write( "|".join( fields ) )
@@ -172,8 +177,13 @@ class FlatFileStore( Store ):
     
     
     def __parse_game_line( self, line ):
-        name = line.split( "|" )
-        game = Game( name )
+        gameid, name, vis, userlist, dungeon, heros = line.split( "|" )
+        game = Game()
+        game.id = gameid
+        game.name = name
+        game.visibility = vis
+        game.accessible_users = userlist.split( "," )
+
         # TODO Finish this
         return game
     
@@ -183,6 +193,7 @@ class FlatFileStore( Store ):
             game.id,
             game.name,
             game.visibility,
+            self.__get_user_list( game.accessible_users ),
             self.__get_dungeon_fields( game.dungeon ),
             self.__get_hero_fields( game.heros )
         ]
@@ -200,4 +211,6 @@ class FlatFileStore( Store ):
         # TODO Implement this
         return ""
     
+    def __get_user_list( self, usernames ):
+        return ",".join( usernames )
     

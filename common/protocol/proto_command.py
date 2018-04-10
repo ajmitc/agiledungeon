@@ -37,6 +37,8 @@ class ProtocolCommand:
             self.RREGISTER,
             self.RLOGIN,
             self.RJOIN,
+            self.RGETGAMES,
+            self.RNEWGAME,
         ]
     
     
@@ -67,3 +69,13 @@ class ProtocolCommand:
     
     
         
+
+class LoginRegisterCommand( ProtocolCommand ):
+    # REGISTER||username|password
+    # LOGIN||username|password
+    def __init__( self, parsed_command ):
+        ProtocolCommand.__init__( self, parsed_command.command )
+        self.username = parsed_command.args[ 0 ]
+        self.password = parsed_command.args[ 1 ]
+
+

@@ -1,4 +1,5 @@
 from view import View
+from client.menu.menu import *
 
 class BasicTerminalView( View ):
     def __init__( self ):
@@ -12,17 +13,33 @@ class BasicTerminalView( View ):
         items = []
         for item in menu.menuitems:
             if isinstance( item, MenuItem ):
-                print (index + 1), ") ", item.display
-                index += 1
+                if item.options is not None:
+                    if type(item.options) is list and len(item.options) > 0:
+                        print item.options[ 0 ], ")", item.display
+                    else:
+                        print item.options, ")", item.display
+                else:
+                    print (index + 1), ")", item.display
+                    item.options = [ str(index) ]
+                    index += 1
                 items.append( item )
             elif isinstance( item, MenuHeading ):
+                print "== %s ==" % item.display
+            elif isinstance( item, MenuItemSeparator ):
                 print item.display
-        inp = raw_input( menu.prompt )
-        try:
-            inp = int(inp) - 1
-            return (True, inp, items[ inp ])
-        except:
-            pass
+        inp = raw_input( menu.prompt ).strip()
+        selected_item = None
+        for item in menu.menuitems:
+            if isinstance( item, MenuItem ) and item.options is not None:
+                if type(item.options) is list and inp in item.options:
+                    selected_item = item
+                    break
+                elif item.options == inp:
+                    selected_item = item
+                    break
+        if selected_item is not None:
+            print "Selected item: %s" % (str(selected_item))
+            return (True, inp, selected_item)
         return (False, inp, "Invalid selection")
         
     def populate_new_game_fields( self, command, existing_names ):

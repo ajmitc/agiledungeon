@@ -6,28 +6,29 @@ from item.item import Item, ItemFactory
 def load_rooms( filename ):
     roomsxml = parse_xml( filename )
     rooms = []
-    for roomxml in roomsxml.find( "room" ):
+    for roomxml in roomsxml.findall( "room" ):
         room = Room()
         room.name = roomxml.find( "name" ).text
         room.description = roomxml.find( "description" ).text
-        room.min_level = room.find( "minLevel" ).text
-        room.max_level = room.find( "maxLevel" ).text
-        room.min_monsters = room.find( "minMonsters" ).text
-        room.max_monsters = room.find( "maxMonsters" ).text
+        room.min_level = int(roomxml.find( "minLevel" ).text)
+        room.max_level = int(roomxml.find( "maxLevel" ).text)
+        room.min_monsters = int(roomxml.find( "minMonsters" ).text)
+        room.max_monsters = int(roomxml.find( "maxMonsters" ).text)
         rooms.append( room )
     return RoomFactory( rooms )
 
 
- def load_monsters( filename ):
+def load_monsters( filename ):
     monsxml = parse_xml( filename )
     monsters = []
-    for monxml in monsxml.find( "monster" ):
+    for monxml in monsxml.findall( "monster" ):
+        print monxml
         mon = Monster()
-        mon.id = monxml.attr( "id" )
-        mon.name = monxml.attr( "name" )
-        mon.level = monxml.attr( "level" )
-        mon.reaction_time = int(monxml.attr( "reaction" ))
-        mon.attack = int(monxml.attr( "attack" ))
+        mon.id = monxml.get( "id" )
+        mon.name = monxml.get( "name" )
+        mon.level = int(monxml.get( "level" ))
+        mon.reaction_time = int(monxml.get( "reaction" )) if monxml.get( "reaction" ) is not None else -1
+        mon.attack = int(monxml.get( "attack" ))
         mon.description = monxml.find( "description" ).text
         mon.puzzle = Puzzle()
         mon.puzzle.problem_text = monxml.find( "problem" ).text
@@ -52,10 +53,10 @@ def load_rooms( filename ):
 def load_items( filename ):
     itemsxml = parse_xml( filename )
     items = []
-    for itemxml in itemsxml.find( "item" ):
+    for itemxml in itemsxml.findall( "item" ):
         item = Item()
-        item.name = itemxml.attr( "name" )
-        item.level = int(itemxml.attr( "level" ))
+        item.name = itemxml.get( "name" )
+        item.level = int(itemxml.get( "level" ))
         locationsxml = itemxml.find( "equip_locations" )
         if locationsxml is not None:
             for locationxml in locationsxml.find( "equip_location" ):
@@ -94,13 +95,16 @@ def load_items( filename ):
         
         
 def parse_xml( filename ):
-	tree = ET.parse( filename )
+    tree = ET.parse( filename )
     root = tree.getroot()
     return root
     
     
 def write_xml( xml, filename ):
-	tree = ET.ElementTree( xml )
+    tree = ET.ElementTree( xml )
     tree.write( filename )
     
    
+if __name__ == "__main__":
+    print str(load_monsters( "../data/monsters.xml" ))
+

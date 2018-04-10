@@ -1,5 +1,5 @@
 from item import Item
-from hero import Hero
+from common.hero.hero import Hero
 
 # Weapons allow users to get hints.  The Item level determines the number
 # of hints the user may receive per monster.
@@ -11,8 +11,8 @@ class Fists( Item ):
 
         
 class ShortSword( Item ):
-	def __init__( self ):
-    	Item.__init__( self, Item.SHORT_SWORD )
+    def __init__( self ):
+        Item.__init__( self, Item.SHORT_SWORD )
         self.equip_location.append( Hero.PRIMARY_HAND )
         self.level = 1
         

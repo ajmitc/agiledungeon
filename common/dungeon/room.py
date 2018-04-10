@@ -1,5 +1,5 @@
 
-class Room:
+class Room( object ):
     # Doors
     NORTH = "NORTH"
     SOUTH = "SOUTH"
@@ -9,13 +9,13 @@ class Room:
     # Stairs
     UP = "Up"
     DOWN = "Down"
-    
-	def ___init__( self, name, desc="" ):
-    	self.name = name
+
+    def __init__( self, name="", desc="" ):
+        self.name = name
         self.description = desc
-    	self.monsters = []
+        self.monsters = []
         self.doors = {
-        	self.NORTH: None,
+            self.NORTH: None,
             self.SOUTH: None,
             self.WEST: None,
             self.EAST: None
@@ -52,5 +52,10 @@ class RoomFactory:
     
     
     def get_rooms_for_level( self, dungeon_level ):
-        return [ room.clone() for room in self.rooms if room.max_level >= dungeon_level >= room.min_level ]
-    
+        rooms = []
+        for room in self.rooms:
+            if room.max_level >= dungeon_level >= room.min_level:
+                rooms.append( room.clone() )
+        return rooms
+        #return [ room.clone() for room in self.rooms if room.max_level >= dungeon_level >= room.min_level ]
+

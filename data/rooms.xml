@@ -1,18 +1,18 @@
 <rooms>
   <room>
-    <name>Great Hall<\name>
-    <description>Suits of armor line the walls of the Great Hall.<\description>
-    <minLevel>1<\minLevel>
-    <maxLevel>10<\maxLevel>
-    <minMonsters>1<\minMonsters>
-    <maxMonsters>5<\maxMonsters>
-  <\room>
+    <name>Great Hall</name>
+    <description>Suits of armor line the walls of the Great Hall.</description>
+    <minLevel>1</minLevel>
+    <maxLevel>10</maxLevel>
+    <minMonsters>1</minMonsters>
+    <maxMonsters>5</maxMonsters>
+  </room>
   <room>
-    <name>Torture Room<\name>
-    <description>The room srinks of death. There is a stretching rack in one corner and feightening metal tools hanging from the walls.<\description>
-    <minLevel>1<\minLevel>
-    <maxLevel>10<\maxLevel>
-    <minMonsters>1<\minMonsters>
-    <maxMonsters>4<\maxMonsters>
-  <\room>
-<\rooms>
+    <name>Torture Room</name>
+    <description>The room srinks of death. There is a stretching rack in one corner and feightening metal tools hanging from the walls.</description>
+    <minLevel>1</minLevel>
+    <maxLevel>10</maxLevel>
+    <minMonsters>1</minMonsters>
+    <maxMonsters>4</maxMonsters>
+  </room>
+</rooms>

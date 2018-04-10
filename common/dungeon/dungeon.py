@@ -1,16 +1,19 @@
 import random
+from room import Room
 
-class Dungeon:
-	MIN_ROOMS = 10
+class Dungeon( object ):
+    MIN_ROOMS = 10
     MAX_ROOMS = 40
-    
-	def ___init__( self ):
-    	self.rooms = []  # The first item is always the Entrance to the dungeon
+
+
+    def __init__( self ):
+        self.rooms = []  # The first item is always the Entrance to the dungeon
         self.depth = 1
         
         
     def build( self, roomfactory, monsterfactory, itemfactory ):
-    	min_rooms = self.MIN_ROOMS
+        print "Building Dungeon"
+        min_rooms = self.MIN_ROOMS
         max_rooms = self.MAX_ROOMS
         num_rooms = random.randint( min_rooms, max_rooms )
         # filter rooms appropriate for the current dungeon level
@@ -20,13 +23,13 @@ class Dungeon:
         entrance.x = 0
         entrance.y = 0
         self.rooms.append( entrance )
-        curr = entrance
         self.__visit_room( entrance, 1, num_rooms, rooms, monsterfactory, itemfactory )
-        
+        print "Dungeon Built"
+
             
             
     def __visit_room( self, room, room_count, max_rooms, rooms, monsterfactory, itemfactory, visited=[] ):
-        if room in visited or room_count >= max_rooms:
+        if room is None or room in visited or room_count >= max_rooms:
             return
         visited.append( room )
         for door in [ Room.NORTH, Room.SOUTH, Room.EAST, Room.WEST ]:
@@ -50,12 +53,12 @@ class Dungeon:
         
         
     def __build_room( self, x, y, room_desc, monsterfactory, itemfactory ):
-    	room = room_desc.clone()
+        room = room_desc.clone()
         room.x = x
         room.y = y
         # randomly choose monsters
         num_monsters = random.randint( 1, 4 )
         for i in xrange( num_monsters ):
-        	monster = monsterfactory.get_random( self.depth )
+            monster = monsterfactory.get_random( self.depth )
             room.monsters.append( monster )
         return room

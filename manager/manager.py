@@ -25,6 +25,7 @@ class AgileDungeonManager:
     def open_server_socket( self ):
         port = int(self.props[ "port" ]) if "port" in self.props.keys() else 9876
         self.listen_socket = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
+        self.listen_socket.setsockopt( socket.SOL_SOCKET, socket.SO_REUSEADDR, 1 )
         self.listen_socket.bind( (socket.gethostname(), port) )
         self.listen_socket.listen(5)
         print "Listening on %s port %d" % (socket.gethostname(), port)

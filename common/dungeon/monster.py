@@ -1,12 +1,12 @@
 import random
 
 class Monster:
-	"""
+    """
     A monster is a puzzle that must be solved 
     """
     def __init__( self, name="", desc="" ):
         self.id = 0
-    	self.level = 1
+        self.level = 1
         self.name = name
         self.description = desc
         # Number of seconds the player has to submit a solution before the monster attacks. If the monster hits the player, the player loses some hitpoints and this timer is restarted.
@@ -29,8 +29,8 @@ class Monster:
         
         
 class Puzzle:
-	def __init__( self ):
-    	self.problem_text = None  # String or callable
+    def __init__( self ):
+        self.problem_text = None  # String or callable
         self.solution_text = None  # String or callable
         self.solution_checker = self.match_exact_solution  # Method that checks if user-supplied solution is correct
         self.keywords = []
@@ -41,12 +41,12 @@ class Puzzle:
     def match_exact_solution( self, inp ):
         """ Case sensitive solution match """
         return inp == self.solution_text
-	
-	def match_inexact_solution( self, inp ):
+    
+    def match_inexact_solution( self, inp ):
         """ Case insensitive solution match """
         return inp.lower() == self.solution_text.lower()
-	
-	def match_keyword_solution( self, inp ):
+    
+    def match_keyword_solution( self, inp ):
         for keyword in self.keywords:
             if not inp.lower().find( keyword.lower() ):
                 return False

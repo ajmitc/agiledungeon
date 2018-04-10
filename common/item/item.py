@@ -5,11 +5,11 @@ class Item:
     
     # Item names
     FISTS = "Fists"
-	SHORT_SWORD = "Short Sword"
+    SHORT_SWORD = "Short Sword"
     STAFF = "Staff"
     
-	def __init__( self, name ):
-    	self.name = name
+    def __init__( self, name="Item" ):
+        self.name = name
         self.level = 0
         self.equip_location = []  # List of locations this Item could be carried.  Values are OR'd.
         self.carriable_by = []
@@ -24,7 +24,7 @@ class Item:
         
         
     def __str__( self ):
-    	return "%s,%d,%s" % (self.name, self.level, self.equip_location)
+        return "%s,%d,%s" % (self.name, self.level, self.equip_location)
         
 
 class ItemFactory:

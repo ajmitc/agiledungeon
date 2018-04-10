@@ -2,27 +2,30 @@ from menu import *
 
 class MainMenu( Menu ):
     def __init__( self, client ):
-        Menu.__init__( self, "Agile Dungeon" )
+        Menu.__init__( self, "*****************\n* Agile Dungeon *\n*****************" )
         self.client = client
         # Add menu options for existing dungeons
-        if len(self.client.games) > 0:
-            self.menuitems.append( MenuHeading( "Active Games" ) )
+        self.menuitems.append( MenuHeading( "Active Games" ) )
+        if len(self.client.games) == 0:
+            self.menuitems.append( MenuItemSeparator( "   None" ) )
         for game in self.client.games:
             self.menuitems.append( MenuItem( "Play %s" % game.name, self.play_dungeon ))
+        self.menuitems.append( MenuItemSeparator() )
         self.menuitems.append( MenuHeading( "Create/Join Game" ) )
-        self.menuitems.append( MenuItem( "Join Dungeon", self.join_dungeon ) )
-        self.menuitems.append( MenuItem( "Start New Dungeon", self.start_dungeon ) )
-        self.menuitems.append( MenuItem( "" ) )
-        self.menuitems.append( MenuItem( "My Settings", self.open_settings ) )
-        self.menuitems.append( MenuItem( "Exit", self.exit ) )
+        self.menuitems.append( MenuItem( "Join Dungeon", self.join_dungeon, [ 'j', 'join' ] ) )
+        self.menuitems.append( MenuItem( "Create New Dungeon", self.create_dungeon, [ 'n', 'new', 'create' ] ) )
+        self.menuitems.append( MenuItemSeparator() )
+        self.menuitems.append( MenuHeading( "Other" ) )
+        self.menuitems.append( MenuItem( "My Settings", self.open_settings, [ 's', 'settings' ] ) )
+        self.menuitems.append( MenuItem( "Exit", self.exit, [ 'q', 'quit' ] ) )
         
     
     def join_dungeon( self, inp ):
         self.client.join_dungeon()
     
     
-    def start_dungeon( self, inp ):
-        self.client.start_new_dungeon()
+    def create_dungeon( self, inp ):
+        self.client.create_new_dungeon()
     
     
     def open_settings( self, inp ):
@@ -32,7 +35,8 @@ class MainMenu( Menu ):
             if not success:
                 print selection_or_reason
                 continue
-            selection_or_reason.callback( inp )
+            if selection_or_reason.callback is not None:
+                selection_or_reason.callback( inp )
     
     
     def play_dungeon( self, inp ):
