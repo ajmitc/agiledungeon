@@ -5,6 +5,7 @@ from proto_command import *
 # Error:
 # ERROR|COMMAND|ERROR_CODE|ERROR_MESSAGE
 
+"""
 def parse_command( cmdstr ):
     if cmdstr == "":
         return None
@@ -23,7 +24,7 @@ def parse_command( cmdstr ):
         cmd.args = parts[ 2: ]
     cmd.parse_args( cmd.args )
     return cmd
-
+"""
 
 def create_response( cmd, error_code=None, error_message=None ):
     if error_code is not None:

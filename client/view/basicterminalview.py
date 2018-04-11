@@ -20,7 +20,7 @@ class BasicTerminalView( View ):
                         print item.options, ")", item.display
                 else:
                     print (index + 1), ")", item.display
-                    item.options = [ str(index) ]
+                    item.options = [ str(index + 1) ]
                     index += 1
                 items.append( item )
             elif isinstance( item, MenuHeading ):

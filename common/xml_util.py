@@ -94,15 +94,23 @@ def load_items( filename ):
     return ItemFactory( items )
         
         
-def parse_xml( filename ):
-    tree = ET.parse( filename )
-    root = tree.getroot()
-    return root
+def parse_xml( filename=None, xmlstring=None ):
+    if filename is not None:
+        tree = ET.parse( filename )
+        root = tree.getroot()
+        return root
+    elif xmlstring is not None:
+        root = ET.fromstring( xmlstring )
+        return root
+    return None
     
     
-def write_xml( xml, filename ):
-    tree = ET.ElementTree( xml )
-    tree.write( filename )
+def write_xml( xml, filename=None ):
+    if filename is not None:
+        tree = ET.ElementTree( xml )
+        tree.write( filename )
+    else:
+        return ET.tostring( xml )
     
    
 if __name__ == "__main__":

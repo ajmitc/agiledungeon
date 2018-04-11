@@ -1,4 +1,5 @@
 import random
+import xml.etree.ElementTree as ET
 
 class Monster:
     """
@@ -26,8 +27,42 @@ class Monster:
         other.puzzle = self.puzzle.clone() if self.puzzle is not None else None
         other.next_monster = self.next_monster
         return other
-        
-        
+
+
+    def to_xml( self ):
+        elMonster = ET.Element( "monster" )
+        elMonster.set( "id", str(self.id) )
+        elMonster.set( "level", str(self.level) )
+        elMonster.set( "name", self.name )
+        elMonster.set( "desc", self.description )
+        elMonster.set( "reactionTime", str(self.reaction_time) )
+        elMonster.set( "attack", str(self.attack) )
+        elMonster.set( "nextMonster", str(self.next_monster) if self.next_monster is not None else "-1" )
+        elPuzzle = self.puzzle.to_xml() if self.puzzle is not None else None
+        if elPuzzle is not None:
+            elMonster.append( elPuzzle )
+        return elMonster
+
+
+    def from_xml( self, xml ):
+        if xml.tag != "monster":
+            return False
+        self.id = int(xml.get( "id" ))
+        self.level = int(xml.get( "level" ))
+        self.name  = xml.get( "name" )
+        self.description = xml.get( "desc" )
+        self.reaction_time = int(xml.get( "reactionTime" ))
+        self.attack = int(xml.get( "attack" ))
+        self.next_monster = int(xml.get( "nextMonster" ))
+        if self.next_monster == -1:
+            self.next_monster = None
+        for child in xml:
+            if child.tag == "puzzle":
+                self.puzzle = Puzzle()
+                self.puzzle.from_xml( child )
+        return True
+
+
 class Puzzle:
     def __init__( self ):
         self.problem_text = None  # String or callable
@@ -62,7 +97,60 @@ class Puzzle:
         [ other.hints.append( h ) for h in self.hints ]
         [ other.guesses.append( g ) for g in self.guesses ]
         return other
-    
+
+
+    def to_xml( self ):
+        elPuzzle = ET.Element( "puzzle" )
+        elProblem = ET.SubElement( elPuzzle, "problem" )
+        elProblem.text = self.problem_text
+        elSolution = ET.SubElement( elPuzzle, "solution" )
+        elSolution.text = self.solution_text
+        checker = "exact"
+        if self.solution_checker == self.match_inexact_solution:
+            checker = "inexact"
+        elif self.solution_checker == self.match_keyword_solution:
+            checker = "keyword"
+        elSolution.set( "checker", checker )
+        elKeywords = ET.SubElement( elPuzzle, "keywords" )
+        for keyword in self.keywords:
+            elKeyword = ET.SubElement( elKeywords, "keyword" )
+            elKeyword.text = keyword
+        elHints = ET.SubElement( elPuzzle, "hints" )
+        for hint in self.hints:
+            elHint = ET.SubElement( elHints, "hint" )
+            elHint.text = hint
+        elGuesses = ET.SubElement( elPuzzle, "guesses" )
+        for guess in self.guesses:
+            elGuess = ET.SubElement( elGuesses, "guess" )
+            elGuess.text = guess
+        return elPuzzle
+
+
+    def from_xml( self, xml ):
+        if xml.tag != "puzzle":
+            return False
+        elProblem = xml.find( "problem" )
+        self.problem_text = elProblem.text
+        elSolution = xml.find( "solution" )
+        self.solution_text = elSolution.text
+        checker = elSolution.get( "checker" )
+        if checker == "exact":
+            self.solution_checker = self.match_exact_solution
+        elif checker == "inexact":
+            self.solution_checker = self.match_inexact_solution
+        elif checker == "keyword":
+            self.solution_checker = self.match_keyword_solution
+        elKeywords = xml.find( "keywords" )
+        for elKeyword in elKeywords:
+            self.keywords.append( elKeyword.text )
+        elHints = xml.find( "hints" )
+        for elHint in elHints:
+            self.hints.append( elHint.text )
+        elGuesses = xml.find( "guesses" )
+        for elGuess in elGuesses:
+            self.guesses.append( elGuess.text )
+        return True
+
     
 class MonsterFactory:
     def __init__( self, monsters ):

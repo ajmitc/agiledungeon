@@ -1,4 +1,5 @@
 import random
+import xml.etree.ElementTree as ET
 from room import Room
 
 class Dungeon( object ):
@@ -7,7 +8,7 @@ class Dungeon( object ):
 
 
     def __init__( self ):
-        self.rooms = []  # The first item is always the Entrance to the dungeon
+        self.rooms = []  # The first room is always the Entrance to the dungeon
         self.depth = 1
         
         
@@ -62,3 +63,29 @@ class Dungeon( object ):
             monster = monsterfactory.get_random( self.depth )
             room.monsters.append( monster )
         return room
+
+
+    def to_xml( self ):
+        elDungeon = ET.Element( "dungeon" )
+        elDungeon.set( "depth", str(self.depth) )
+        elRooms = ET.SubElement( elDungeon, "rooms" )
+        for room in self.rooms:
+            elRoom = room.to_xml()
+            elRooms.append( elRoom )
+        return elDungeon
+
+
+    def from_xml( self, xml ):
+        if xml.tag != "dungeon":
+            return False
+        self.depth = int(xml.get( "depth" ))
+        elRooms = xml.find( "rooms" )
+        for elRoom in elRooms:
+            room = Room()
+            room.from_xml( elRoom )
+            self.rooms.append( room )
+        return True
+
+
+    def __str__( self ):
+        pass

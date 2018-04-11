@@ -42,10 +42,10 @@ class MainMenu( Menu ):
     def play_dungeon( self, inp ):
         # Since the active games appear first, we can use the index to select which game was selected
         try:
-            inp = int(inp)
+            inp = int(inp) - 1
         except Exception, e:
             print "Invalid selection"
             return
-        game = self.games[ inp ]
+        game = self.client.games[ inp ]
         # Start game
         self.client.play_dungeon( game )

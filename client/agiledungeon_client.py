@@ -6,8 +6,8 @@ from menu.mainmenu import MainMenu
 from view.basicterminalview import BasicTerminalView
 from common.game import Game
 from common.protocol.proto_command import ProtocolCommand
-from common.protocol.protocol import parse_command
 from common.util import *
+from common.xml_util import parse_xml
 import signal
 
 
@@ -142,8 +142,8 @@ class AgileDungeonClient:
             if not self.register():
                 return
         logincmd = ProtocolCommand( ProtocolCommand.LOGIN )
-        logincmd.args.append( username )
-        logincmd.args.append( password )
+        logincmd.args[ 'username' ] = username
+        logincmd.args[ 'password' ] = password
         self.send_command( logincmd )
     
     
@@ -158,8 +158,8 @@ class AgileDungeonClient:
                 continue
             done = True
         registercmd = ProtocolCommand( ProtocolCommand.REGISTER )
-        registercmd.args.append( username )
-        registercmd.args.append( password )
+        registercmd.args[ 'username' ] = username
+        registercmd.args[ 'password' ] = password
         self.send_command( registercmd )
     
     
@@ -167,19 +167,20 @@ class AgileDungeonClient:
         if inp == "":
             return
         print "Received '%s'" % str(inp)
-        resp = parse_command( inp )
-        if resp is None:
-            return
+        #resp = parse_command( inp )
+        resp = ProtocolCommand()
+        resp.unpack( parse_xml( xmlstring=inp ) )
+        #if resp is None:
+            #return
         if resp.command == ProtocolCommand.ERROR:
             print "Received Error: "
             print "   Command: %s" % str(resp.error_command)
             print "   Code:    %d" % resp.error_code
             print "   Message: %s" % resp.error_msg
         elif resp.command == ProtocolCommand.RLOGIN:
-            success = resp.args[ 0 ].lower() == "true"
-            hash_or_reason = resp.args[ 1 ]
+            success = resp.args[ 'success' ]
             if not success:  # Login failed
-                print "Login failed: %s" % hash_or_reason
+                print "Login failed: %s" % resp.args[ 'reason' ]
                 # TODO ask to update login credentials
                 username = self.props[ "manager.username" ] if "manager.username" in self.props.keys() else None
                 password = self.props[ "manager.password" ] if "manager.password" in self.props.keys() else None
@@ -187,40 +188,41 @@ class AgileDungeonClient:
                 if username is not None and password is not None:
                     # Register
                     registercmd = ProtocolCommand( ProtocolCommand.REGISTER )
-                    registercmd.args.append( username )
-                    registercmd.args.append( password )
+                    registercmd.args[ 'username' ] = username
+                    registercmd.args[ 'password' ] = password
                     print "Sending registration command: %s" % registercmd.pack()
                     self.send_command( registercmd )
                 else:
                     print "Username and/or password are not set in properties file (%s).  Set manager.username and manager.password to register." % self.PROPERTIES_FILE
                     self._stop = True
                 return
-            self.hash = hash_or_reason
+            self.hash = resp.args[ 'hash' ]
             print "Login successful"
             self.on_login_successful()
         elif resp.command == ProtocolCommand.RREGISTER:
-            success = resp.args[ 0 ]
+            success = resp.args[ 'success' ]
             if not success:
-                print resp.args[ 1 ]
+                print resp.args[ 'reason' ]
                 self.register()
                 return
             print "Registration success"
-            self.props[ "manager.username" ] = resp.args[ 2 ]
-            self.props[ "manager.password" ] = resp.args[ 3 ]
+            self.props[ "manager.username" ] = resp.args[ 'username' ]
+            self.props[ "manager.password" ] = resp.args[ 'password' ]
             save_properties_file( self.PROPERTIES_FILE, self.props )
             self.login()
         elif resp.command == ProtocolCommand.RGETGAMES:
             self.games = []
-            for arg in resp.args:
-                game = Game()
-                game.from_str( arg )
-            	self.games.append( game )
+            for name, xml in resp.args.iteritems():
+                # There is a wrapper element that only contains the game name, parse the child
+                for elGame in xml:
+                    game = Game()
+                    game.from_xml( elGame )
+            	    self.games.append( game )
             self.display_mainmenu()
         elif resp.command == ProtocolCommand.RNEWGAME:
-            success = resp.args[ 0 ]
-            game_id_or_reason = resp.args[ 1 ]
+            success = resp.args[ 'success' ]
             if not success:
-                print resp.args[ 1 ]
+                print resp.args[ 'reason' ]
                 return
             # New Game created, ask player if he wants to start playing it
             print "New Game Created."
@@ -257,11 +259,11 @@ class AgileDungeonClient:
     
     
     def join_dungeon( self ):
-        pass
-        
+        print "Joining a dungeon is not yet implemented"
+
     
     def play_dungeon( self, game ):
-        pass
+        print "Playing a dungeon is not yet implemented"
     
             
     def send_command( self, cmd ):

@@ -3,6 +3,7 @@ from common import error
 from common.protocol import protocol
 from common.protocol.proto_command import ProtocolCommand, LoginRegisterCommand
 from common.game import Game
+from common.xml_util import parse_xml
 from user.user import User
 
 class ClientThread( threading.Thread ):
@@ -35,7 +36,9 @@ class ClientThread( threading.Thread ):
         while not self._stop:
             cmd = self.sock.recv( 2048 )
             print "<= %s" % cmd
-            parsed_command = protocol.parse_command( cmd )    
+            #parsed_command = protocol.parse_command( cmd )
+            parsed_command = ProtocolCommand()
+            parsed_command.unpack( parse_xml( xmlstring=cmd ) )
             self.handle_command( parsed_command )
         
         
@@ -43,9 +46,11 @@ class ClientThread( threading.Thread ):
         self.debug( "Validating user" )
         cmd = self.sock.recv( 2048 )
         self.debug( "Received '%s'" % str(cmd) )
-        parsed_command = protocol.parse_command( cmd )
-        if parsed_command is None:
-            return False, protocol.create_error_response( cmd, error.ERROR_INVALID_COMMAND, "Cannot parse '%s'" % cmd )
+        #parsed_command = protocol.parse_command( cmd )
+        parsed_command = ProtocolCommand()
+        parsed_command.unpack( parse_xml( xmlstring=cmd ) )
+        #if parsed_command is None:
+            #return False, protocol.create_error_response( cmd, error.ERROR_INVALID_COMMAND, "Cannot parse '%s'" % cmd )
         if parsed_command.command == ProtocolCommand.LOGIN:
             return self.handle_login( parsed_command, False )
         elif parsed_command.command == ProtocolCommand.REGISTER:
@@ -94,24 +99,25 @@ class ClientThread( threading.Thread ):
             if user.username == cmd.username:
                 self.debug( "Found matching username, checking password..." )
                 success, hash_or_reason = user.login( cmd.username, cmd.password )
+                resp = cmd.get_response()
+                resp.args[ 'success' ] = success
                 if success:
                     self.debug( "Login success" )
                     self.store.save_users( users )
                     self.user = user
+                    resp.args[ 'hash' ] = hash_or_reason
                 else:
                     self.debug( "Login failed!" )
+                    resp.args[ 'reason' ] = hash_or_reason
                 self.store.unlock_users()
-                resp = cmd.get_response()
-                resp.args.append( success )
-                resp.args.append( hash_or_reason )
                 if sendcmds:
                     self.send_command( resp )
                 return success, resp
         self.store.unlock_users()
         self.debug( "Username not found" )
         resp = cmd.get_response()
-        resp.args.append( False )
-        resp.args.append( "Username not registered" )
+        resp.args[ 'success' ] = False
+        resp.args[ 'reason' ] = "Username not registered"
         if sendcmds:
             self.send_command( resp )
         return False, resp
@@ -127,8 +133,8 @@ class ClientThread( threading.Thread ):
                 self.debug( "Username already registered" )
                 self.store.unlock_users()
             	resp = cmd.get_response()
-                resp.args.append( False )
-                resp.args.append( "Username already registered" )
+                resp.args[ 'succes' ] = False
+                resp.args[ 'reason' ] = "Username already registered"
                 if sendcmds:
                     self.send_command( resp )
                 return False, resp
@@ -140,7 +146,7 @@ class ClientThread( threading.Thread ):
         self.store.save_users( users )
         self.store.unlock_users()
         resp = cmd.get_response()
-        resp.args.append( user.hash )
+        resp.hash = user.hash
         if sendcmds:
             self.send_command( resp )
         return True, resp
@@ -157,7 +163,7 @@ class ClientThread( threading.Thread ):
         self.store.unlock_games()
         resp = cmd.get_response()
         for g in games:
-        	resp.args.append( str(g) )
+        	resp.args[ g.name ] = g
         self.send_command( resp )
 
 
@@ -181,7 +187,8 @@ class ClientThread( threading.Thread ):
         self.store.unlock_games()
         print "Game Saved"
         resp = cmd.get_response()
-        resp.args = [ "true", game.id ]
+        resp.args[ 'success' ] = "true"
+        resp.args[ 'gameid' ] = game.id
         self.send_command( resp )
     
     
