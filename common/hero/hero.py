@@ -6,6 +6,14 @@ class Hero:
     ELF = "Elf"
     DWARF = "Dwarf"
     WIZARD = "Wizard"
+
+    # Ordered list so loops will stay consistent
+    HERO_TYPES = [
+        BARBARIAN,
+        DWARF,
+        ELF,
+        WIZARD
+    ]
     
     PRIMARY_HAND = "Primary Hand"
     SECONDARY_HAND = "Secondary Hand"
@@ -30,6 +38,7 @@ class Hero:
             self.RING1: None,
             self.RING2: None,
         }
+        self.player = None  # (username)
         
     
     def reset( self, itemfactory ):
@@ -43,6 +52,7 @@ class Hero:
         elHero.set( "name", self.name )
         elHero.set( "maxHitpoints", str(self.max_hitpoints) )
         elHero.set( "hitpoints", str(self.hitpoints) )
+        elHero.set( "player", self.player if self.player is not None else "" )
         elInventory = ET.SubElement( elHero, "inventory" )
         for item in self.inventory:
             elInventory.append( item.to_xml() )
@@ -61,6 +71,7 @@ class Hero:
         self.name = xml.get( "name" )
         self.max_hitpoints = int(xml.get( "maxHitpoints" ))
         self.hitpoints = int(xml.get( "hitpoints" ))
+        self.player = xml.get( "player" ) if xml.get( "player" ) != "" else None
         elInventory = xml.find( "inventory" )
         for elItem in elInventory:
             item = Item()

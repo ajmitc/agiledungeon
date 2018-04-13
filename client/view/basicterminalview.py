@@ -79,4 +79,30 @@ class BasicTerminalView( View ):
             else:
                 done = True
         return command
-    
+
+
+    def pause( self, text="Press Enter to continue" ):
+        raw_input( text )
+
+
+    def display_hero_summary( self, heroes_dict ):
+        table = BasicTerminalTable()
+        for type in Hero.HERO_TYPES:
+            hero = heroes_dict[ type ]
+            table.add( hero.player )
+            table.add( type )
+            table.add( hero.name )
+            table.add( hero.hitpoints + " / " + hero.max_hitpoints )
+            table.add( ", ".join( [ where + "(" + str(item) + ")" for where, item in hero.equipment.iteritems() if item is not None ] ) )
+            table.add( ", ".join( [ str(item) for item in hero.inventory ] ) )
+        table.headers = [
+            "Player",
+            "Type",
+            "Name",
+            "Hitpoints",
+            "Equipment",
+            "Inventory"
+        ]
+        print str(table)
+
+

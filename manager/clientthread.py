@@ -62,8 +62,33 @@ class ClientThread( threading.Thread ):
     def validate_hash( self, cmd ):
         # TODO Implement this
         return True, None
-        
-    
+
+
+    def lookup_user( self, hash ):
+        ret = None
+        self.store.lock_users()
+        users = self.store.load_users()
+        for user in users:
+            if user.hash == hash:
+                ret = user
+                break
+        self.store.unlock_users()
+        return ret
+
+
+    def lookup_game( self, gameid ):
+        ret = None
+        self.store.lock_games()
+        games = self.store.load_games()
+        for game in games:
+            if game.id == gameid:
+                ret = game
+                break
+        self.store.save_games( games )
+        self.store.unlock_games()
+        return ret
+
+
     def handle_command( self, cmd ):
         if cmd is None:
             return
@@ -84,6 +109,10 @@ class ClientThread( threading.Thread ):
             self.handle_newgame( cmd )
         elif cmd.command == ProtocolCommand.JOIN:
             self.handle_join( cmd )
+        elif cmd.command == ProtocolCommand.CONTROL:
+            self.handle_control_hero( cmd )
+        elif cmd.command == ProtocolCommand.GAMEUPDATE:
+            self.handle_get_game_update( cmd )
         else:
             self.debug( "Received unsupported command: '%s'" % cmd.command )
             resp = cmd.get_error_response( error.ERROR_UNSUPPORTED_COMMAND, "Unsupported command: '%s'" % cmd.command )
@@ -106,6 +135,7 @@ class ClientThread( threading.Thread ):
                     self.store.save_users( users )
                     self.user = user
                     resp.args[ 'hash' ] = hash_or_reason
+                    resp.args[ 'username' ] = cmd.username
                 else:
                     self.debug( "Login failed!" )
                     resp.args[ 'reason' ] = hash_or_reason
@@ -163,7 +193,7 @@ class ClientThread( threading.Thread ):
         self.store.unlock_games()
         resp = cmd.get_response()
         for g in games:
-        	resp.args[ g.name ] = g
+            resp.args[ g.name ] = g
         self.send_command( resp )
 
 
@@ -197,7 +227,37 @@ class ClientThread( threading.Thread ):
         JOIN|hash|gameid
         """
         pass
-    
+
+
+    def handle_control_hero( self, cmd ):
+        hero_type = cmd.args[ 'type' ]
+        gameid = cmd.args[ 'game' ]
+        # Get user's username
+        user = self.lookup_user( cmd.hash )
+        # Lookup game by id
+        success = False
+        self.store.lock_games()
+        games = self.store.load_games()
+        for game in games:
+            if game.id == gameid:
+                hero = game.heroes[ hero_type ]
+                if hero.player is None:
+                    hero.player = user.username
+        self.store.save_games( games )
+        self.store.unlock_games()
+        resp = cmd.get_response()
+        resp.args[ 'success' ] = success
+        if success:
+            resp.args[ 'type' ] = hero_type
+        else:
+            resp.args[ 'reason' ] = "Hero is not available"
+        self.send_command( resp )
+
+
+    def handle_get_game_update( self, cmd ):
+        gameid = cmd.args[ 'game' ]
+
+
     def myreceive( self ):
         chunks = []
         bytes_recd = 0

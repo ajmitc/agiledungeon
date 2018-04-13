@@ -3,6 +3,7 @@ import traceback
 import threading
 import time
 from menu.mainmenu import MainMenu
+from menu.menu import Menu, MenuItem
 from view.basicterminalview import BasicTerminalView
 from common.game import Game
 from common.protocol.proto_command import ProtocolCommand
@@ -48,6 +49,7 @@ class AgileDungeonClient:
         self.view = BasicTerminalView()
         self.recvthread = ManagerRecvThread( self )
         self.hash = None
+        self.username = None
         # if None, games have not been retrieved, if empty, games retrieved, but none found
         self.games = None
         self.resp_cond = threading.Condition()
@@ -197,6 +199,7 @@ class AgileDungeonClient:
                     self._stop = True
                 return
             self.hash = resp.args[ 'hash' ]
+            self.username = resp.args[ 'username' ]
             print "Login successful"
             self.on_login_successful()
         elif resp.command == ProtocolCommand.RREGISTER:
@@ -217,7 +220,7 @@ class AgileDungeonClient:
                 for elGame in xml:
                     game = Game()
                     game.from_xml( elGame )
-            	    self.games.append( game )
+                    self.games.append( game )
             self.display_mainmenu()
         elif resp.command == ProtocolCommand.RNEWGAME:
             success = resp.args[ 'success' ]
@@ -227,6 +230,19 @@ class AgileDungeonClient:
             # New Game created, ask player if he wants to start playing it
             print "New Game Created."
             self.get_game_list()
+        elif resp.command == ProtocolCommand.RCONTROL:
+            success = resp.args[ 'success' ]
+            if not success:
+                print resp.args[ 'reason' ]
+                return
+            # Player successfully took control of hero
+            print "You are now controlling the %s." % resp.args[ 'type' ]
+            self.get_game_update()
+        elif resp.command == ProtocolCommand.RGAMEUPDATE:
+            success = resp.args[ 'success' ]
+            if not success:
+                print resp.args[ 'reason' ]
+                return
         else:
             print "WARNING: Received unsupported message from manager: %s" % inp
         if self.waiting_for_response:
@@ -236,7 +252,7 @@ class AgileDungeonClient:
             
     def get_game_list( self, wait=False ):
         self.debug( "Getting game list" )
-    	getGameList = ProtocolCommand( ProtocolCommand.GETGAMES )
+        getGameList = ProtocolCommand( ProtocolCommand.GETGAMES )
         getGameList.hash = self.hash
         self.games = None
         if wait:
@@ -247,7 +263,7 @@ class AgileDungeonClient:
         
         
     def game_list_updated( self ):
-    	pass
+        pass
     
     
     def create_new_dungeon( self ):
@@ -260,12 +276,45 @@ class AgileDungeonClient:
     
     def join_dungeon( self ):
         print "Joining a dungeon is not yet implemented"
+        self.view.pause()
 
     
     def play_dungeon( self, game ):
-        print "Playing a dungeon is not yet implemented"
-    
-            
+        self.current_game = game
+        print "Playing %s" % game.name
+        print "Entering Dungeon Floor %d" % game.dungeon.depth
+        print "Room: %s" % game.dungeon.current_room.name
+        print game.dungeon.current_room.description
+        # Print Heroes and players controlling them
+        self.view.display_hero_summary( game.heroes )
+        # Choose hero to control, if none available, set as observer
+        success = False
+        while not success:
+            uncontrolled = [ hero for hero in game.heroes if hero.player is None ]
+            if len(uncontrolled) == 0:
+                print "All Heroes are being controlled, you are now an Observer"
+                success = True
+                continue
+            menu = Menu( "Select Available Hero" )
+            for hero in uncontrolled:
+                menu.menuitems.append( MenuItem( hero.type ) )
+            success, inp, menuitem = self.view.display_menu( menu )
+            if success:
+                hero = game.heroes[ menuitem.display ]
+                msg = ProtocolCommand( ProtocolCommand.CONTROL )
+                msg.args[ 'hero' ] = hero.type
+                msg.args[ 'game' ] = self.current_game.id
+                msg.hash = self.hash
+                self.send_command( msg )
+
+
+    def get_game_update( self ):
+        cmd = ProtocolCommand( ProtocolCommand.GAMEUPDATE )
+        cmd.args[ 'game' ] = self.current_game.id
+        cmd.hash = self.hash
+        self.send_command( cmd )
+
+
     def send_command( self, cmd ):
         cmdstr = cmd.pack()
         print "Sending '%s'" % cmdstr

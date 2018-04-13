@@ -2,18 +2,22 @@ import xml.etree.ElementTree as ET
 from common.xml_util import write_xml
 
 class ProtocolCommand:
-    ERROR      = "ERROR"       # ERROR|command|code|message
-    REGISTER   = "REGISTER"    # REGISTER||username|password
-    RREGISTER  = "RREGISTER"   # RREGISTER|success?|failure_reason|username|password
-    LOGIN      = "LOGIN"       # LOGIN||username|password
-    RLOGIN     = "RLOGIN"      # RLOGIN|success?|hash or reason
-    GETGAMES   = "GETGAMES"    # GETGAMES|hash
-    RGETGAMES  = "RGETGAMES"   # RGETGAMES|game1|game2|...
-    NEWGAME    = "NEWGAME"     # NEWGAME|hash|name|visibility|invite1|invite2|...
-    RNEWGAME   = "RNEWGAME"    # RNEWGAME|success?|game_id_or_error
-    JOIN       = "JOIN"        # JOIN|hash|game_id
-    RJOIN      = "RJOIN"       # RJOIN|success?|game_id_or_error
-    DISCONNECT = "DISCONNECT"  # DISCONNECT|hash
+    ERROR       = "ERROR"       # ERROR|command|code|message
+    REGISTER    = "REGISTER"    # REGISTER||username|password
+    RREGISTER   = "RREGISTER"   # RREGISTER|success?|failure_reason|username|password
+    LOGIN       = "LOGIN"       # LOGIN||username|password
+    RLOGIN      = "RLOGIN"      # RLOGIN|success?|hash or reason
+    GETGAMES    = "GETGAMES"    # GETGAMES|hash
+    RGETGAMES   = "RGETGAMES"   # RGETGAMES|game1|game2|...
+    NEWGAME     = "NEWGAME"     # NEWGAME|hash|name|visibility|invite1|invite2|...
+    RNEWGAME    = "RNEWGAME"    # RNEWGAME|success?|game_id_or_error
+    JOIN        = "JOIN"        # JOIN|hash|game_id
+    RJOIN       = "RJOIN"       # RJOIN|success?|game_id_or_error
+    CONTROL     = "CONTROL"     # Take control of hero
+    RCONTROL    = "RCONTROL"    # Respond to take control of hero
+    GAMEUPDATE  = "GAMEUPDATE"  # Request a game update args: game:id
+    RGAMEUPDATE = "RGAMEUPDATE"
+    DISCONNECT  = "DISCONNECT"  # DISCONNECT|hash
     
     def __init__( self, cmd="" ):
         self.command = cmd

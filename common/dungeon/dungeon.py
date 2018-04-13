@@ -10,6 +10,7 @@ class Dungeon( object ):
     def __init__( self ):
         self.rooms = []  # The first room is always the Entrance to the dungeon
         self.depth = 1
+        self.current_room = None
         
         
     def build( self, roomfactory, monsterfactory, itemfactory ):
@@ -24,6 +25,7 @@ class Dungeon( object ):
         entrance.x = 0
         entrance.y = 0
         self.rooms.append( entrance )
+        self.current_room = entrance
         self.__visit_room( entrance, 1, num_rooms, rooms, monsterfactory, itemfactory )
         print "Dungeon Built"
 
