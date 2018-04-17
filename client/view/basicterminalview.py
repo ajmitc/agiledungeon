@@ -52,7 +52,7 @@ class BasicTerminalView( View ):
             if name.lower() in existing_names:
                 print "Name already taken"
                 continue
-            command.args.append( name )
+            command.args[ 'name' ] = name
             done = True
         # Visibility
         done = False
@@ -67,7 +67,7 @@ class BasicTerminalView( View ):
             else:
                 print "Unrecognized visibility.  Please enter public or private."
                 continue
-            command.args.append( vis )
+            command.args[ "visibility" ] = vis
             done = True
         # Invite players
         done = False

@@ -36,7 +36,6 @@ class ClientThread( threading.Thread ):
         while not self._stop:
             cmd = self.sock.recv( 2048 )
             print "<= %s" % cmd
-            #parsed_command = protocol.parse_command( cmd )
             parsed_command = ProtocolCommand()
             parsed_command.unpack( parse_xml( xmlstring=cmd ) )
             self.handle_command( parsed_command )
@@ -84,7 +83,6 @@ class ClientThread( threading.Thread ):
             if game.id == gameid:
                 ret = game
                 break
-        self.store.save_games( games )
         self.store.unlock_games()
         return ret
 
@@ -192,8 +190,9 @@ class ClientThread( threading.Thread ):
         games = self.store.load_games()
         self.store.unlock_games()
         resp = cmd.get_response()
+        resp.args[ 'games' ] = []
         for g in games:
-            resp.args[ g.name ] = g
+            resp.args[ 'games' ].append( g )
         self.send_command( resp )
 
 
@@ -202,8 +201,8 @@ class ClientThread( threading.Thread ):
         NEWGAME|hash|game-name|game-visibility
         """
         game = Game()
-        game.name = cmd.args[ 0 ]
-        if cmd.args[ 1 ].lower().startswith( "priv" ):
+        game.name = cmd.args[ 'name' ]
+        if cmd.args[ 'visibility' ].lower().startswith( "priv" ):
             game.visibility = Game.VISIBILITY_PRIVATE
             game.accessible_users.append( self.user.username )
         else:
@@ -211,9 +210,7 @@ class ClientThread( threading.Thread ):
         game.new_game()
         print "Saving New Game"
         self.store.lock_games()
-        games = self.store.load_games()
-        games.append( game )
-        self.store.save_games( games )
+        self.store.save_game( game )
         self.store.unlock_games()
         print "Game Saved"
         resp = cmd.get_response()
@@ -243,7 +240,8 @@ class ClientThread( threading.Thread ):
                 hero = game.heroes[ hero_type ]
                 if hero.player is None:
                     hero.player = user.username
-        self.store.save_games( games )
+                break
+        self.store.save_game( game )
         self.store.unlock_games()
         resp = cmd.get_response()
         resp.args[ 'success' ] = success

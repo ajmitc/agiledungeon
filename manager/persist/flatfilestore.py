@@ -1,14 +1,17 @@
+import os
+from uuid import uuid4
 from store import Store
 from manager.user.user import User
 from common.game import Game
 from common.item.item import Item
 from common.dungeon.monster import Monster
+from common.xml_util import parse_xml, write_xml
 import threading
 from datetime import datetime
 
 class FlatFileStore( Store ):
     USER_FILE = "user.txt"
-    GAME_FILE = "games.txt"
+    GAME_DIR = "games"
     ITEM_FILE = "items.txt"
     MONSTER_FILE = "monsters.txt"
     
@@ -160,56 +163,20 @@ class FlatFileStore( Store ):
         
     def load_games( self ):
         games = []
-        fd = open( self.GAME_FILE, "r" )
-        for line in fd.readlines():
-            game = self.__parse_game_line( line )
-            games.append( game )
-        fd.close()
+        for dirpath, directories, filenames in os.walk( self.GAME_DIR ):
+            for fn in filenames:
+                xml = parse_xml( os.path.join( dirpath, fn ) )
+                game = Game()
+                game.from_xml( xml )
+                games.append( game )
         return games
     
     
-    def save_games( self, games ):
-        fd = open( self.GAME_FILE, "w" )
-        for game in games:
-            self.__write_game_line( fd, game )
-        fd.close()
+    def save_game( self, game ):
+        fn = str(uuid4())
+        write_xml( game.to_xml(), os.path.join( self.GAME_DIR, fn ) )
         return True
     
-    
-    def __parse_game_line( self, line ):
-        gameid, name, vis, userlist, dungeon, heros = line.split( "|" )
-        game = Game()
-        game.id = gameid
-        game.name = name
-        game.visibility = vis
-        game.accessible_users = userlist.split( "," )
-
-        # TODO Finish this
-        return game
-    
-
-    def __write_game_line( self, fd, game ):
-        fields = [
-            game.id,
-            game.name,
-            game.visibility,
-            self.__get_user_list( game.accessible_users ),
-            self.__get_dungeon_fields( game.dungeon ),
-            self.__get_hero_fields( game.heros )
-        ]
-        fd.write( "|".join( fields ) )
-        
-        
-    def __get_dungeon_fields( self, dungeon ):
-        fields = [
-            str(dungeon.depth),
-        ]
-        # TODO Add rooms
-        return ""
-    
-    def __get_hero_fields( self, heros ):
-        # TODO Implement this
-        return ""
     
     def __get_user_list( self, usernames ):
         return ",".join( usernames )

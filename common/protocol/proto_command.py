@@ -80,17 +80,25 @@ class ProtocolCommand:
             #fields += [ str(arg) for arg in self.args ]
             for key, value in self.args.iteritems():
                 el = ET.SubElement( root, key )
-                if isinstance( value, str ):
-                    el.set( "type", "string" )
-                    el.text = value
-                elif isinstance( value, int ) or isinstance( value, long ) or isinstance( value, float ) or isinstance( value, bool ):
-                    el.set( "type", type(value).__name__ )
-                    el.text = str(value)
-                elif callable( getattr( value, "to_xml" ) ):
-                    el.set( "type", "object" )
-                    el.append( value.to_xml() )
-        #return "|".join( fields )
+                self.__pack_arg_value( el, value )
         return write_xml( root )
+
+
+    def __pack_arg_value(self, el, value):
+        if isinstance( value, str ):
+            el.set( "type", "string" )
+            el.text = value
+        elif isinstance( value, int ) or isinstance( value, long ) or isinstance( value, float ) or isinstance( value, bool ):
+            el.set( "type", type(value).__name__ )
+            el.text = str(value)
+        elif isinstance( value, list ):
+            el.set( "type", type(value).__name__ )
+            for v in value:
+                self.__pack_arg_value( el, v )
+        elif callable( getattr( value, "to_xml" ) ):
+            el.set( "type", "object" )
+            el.append( value.to_xml() )
+        return el
 
 
     def unpack( self, xml ):
@@ -112,6 +120,10 @@ class ProtocolCommand:
                     self.args[ el.tag ] = float(el.text)
                 elif el.get( "type" ) == "bool":
                     self.args[ el.tag ] = el.text.lower() in [ "t", "true", "y", "yes", "1" ]
+                elif el.get( "type" ) == "list":
+                    self.args[ el.tag ] = []
+                    for subel in el:
+                        self.args[ el.tag ].append( subel )
                 elif el.get( "type" ) == "object":
                     self.args[ el.tag ] = el
 

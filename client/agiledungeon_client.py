@@ -52,6 +52,7 @@ class AgileDungeonClient:
         self.username = None
         # if None, games have not been retrieved, if empty, games retrieved, but none found
         self.games = None
+        self.current_game = None
         self.resp_cond = threading.Condition()
         self.waiting_for_response = False
 
@@ -100,7 +101,7 @@ class AgileDungeonClient:
 
             
     def get_manager_connection( self ):
-    	done = False
+        done = False
         while not done:
             inp = raw_input( "Manager Connection (%s:%d)> " % (self.manager_host, self.manager_port))
             if inp == "":
@@ -129,7 +130,7 @@ class AgileDungeonClient:
             try:
                 self.sock.close()
             except:
-            	pass
+                pass
             self.sock = None
         self.sock = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
         print "Connecting to (%s, %d)" % (self.manager_host, self.manager_port)
@@ -168,110 +169,104 @@ class AgileDungeonClient:
     def handle_manager_response( self, inp ):
         if inp == "":
             return
-        print "Received '%s'" % str(inp)
-        #resp = parse_command( inp )
-        resp = ProtocolCommand()
-        resp.unpack( parse_xml( xmlstring=inp ) )
-        #if resp is None:
-            #return
-        if resp.command == ProtocolCommand.ERROR:
-            print "Received Error: "
-            print "   Command: %s" % str(resp.error_command)
-            print "   Code:    %d" % resp.error_code
-            print "   Message: %s" % resp.error_msg
-        elif resp.command == ProtocolCommand.RLOGIN:
-            success = resp.args[ 'success' ]
-            if not success:  # Login failed
-                print "Login failed: %s" % resp.args[ 'reason' ]
-                # TODO ask to update login credentials
-                username = self.props[ "manager.username" ] if "manager.username" in self.props.keys() else None
-                password = self.props[ "manager.password" ] if "manager.password" in self.props.keys() else None
-                print "Properties username/password: %s/%s" % (username, password)
-                if username is not None and password is not None:
-                    # Register
-                    registercmd = ProtocolCommand( ProtocolCommand.REGISTER )
-                    registercmd.args[ 'username' ] = username
-                    registercmd.args[ 'password' ] = password
-                    print "Sending registration command: %s" % registercmd.pack()
-                    self.send_command( registercmd )
-                else:
-                    print "Username and/or password are not set in properties file (%s).  Set manager.username and manager.password to register." % self.PROPERTIES_FILE
-                    self._stop = True
-                return
-            self.hash = resp.args[ 'hash' ]
-            self.username = resp.args[ 'username' ]
-            print "Login successful"
-            self.on_login_successful()
-        elif resp.command == ProtocolCommand.RREGISTER:
-            success = resp.args[ 'success' ]
-            if not success:
-                print resp.args[ 'reason' ]
-                self.register()
-                return
-            print "Registration success"
-            self.props[ "manager.username" ] = resp.args[ 'username' ]
-            self.props[ "manager.password" ] = resp.args[ 'password' ]
-            save_properties_file( self.PROPERTIES_FILE, self.props )
-            self.login()
-        elif resp.command == ProtocolCommand.RGETGAMES:
-            self.games = []
-            for name, xml in resp.args.iteritems():
-                # There is a wrapper element that only contains the game name, parse the child
-                for elGame in xml:
+        try:
+            print "Received '%s'" % str(inp)
+            resp = ProtocolCommand()
+            resp.unpack( parse_xml( xmlstring=inp ) )
+            if resp.command == ProtocolCommand.ERROR:
+                print "Received Error: "
+                print "   Command: %s" % str(resp.error_command)
+                print "   Code:    %d" % resp.error_code
+                print "   Message: %s" % resp.error_msg
+            elif resp.command == ProtocolCommand.RLOGIN:
+                success = resp.args[ 'success' ]
+                if not success:  # Login failed
+                    print "Login failed: %s" % resp.args[ 'reason' ]
+                    # TODO ask to update login credentials
+                    username = self.props[ "manager.username" ] if "manager.username" in self.props.keys() else None
+                    password = self.props[ "manager.password" ] if "manager.password" in self.props.keys() else None
+                    print "Properties username/password: %s/%s" % (username, password)
+                    if username is not None and password is not None:
+                        # Register
+                        registercmd = ProtocolCommand( ProtocolCommand.REGISTER )
+                        registercmd.args[ 'username' ] = username
+                        registercmd.args[ 'password' ] = password
+                        print "Sending registration command: %s" % registercmd.pack()
+                        self.send_command( registercmd )
+                    else:
+                        print "Username and/or password are not set in properties file (%s).  Set manager.username and manager.password to register." % self.PROPERTIES_FILE
+                        self._stop = True
+                    return
+                self.hash = resp.args[ 'hash' ]
+                self.username = resp.args[ 'username' ]
+                print "Login successful"
+                self.on_login_successful()
+            elif resp.command == ProtocolCommand.RREGISTER:
+                success = resp.args[ 'success' ]
+                if not success:
+                    print resp.args[ 'reason' ]
+                    self.register()
+                    return
+                print "Registration success"
+                self.props[ "manager.username" ] = resp.args[ 'username' ]
+                self.props[ "manager.password" ] = resp.args[ 'password' ]
+                save_properties_file( self.PROPERTIES_FILE, self.props )
+                self.login()
+            elif resp.command == ProtocolCommand.RGETGAMES:
+                self.games = []
+                for xml in resp.args[ 'games' ]:
+                    # There is a wrapper element that only contains the game name, parse the child
                     game = Game()
-                    game.from_xml( elGame )
+                    game.from_xml( xml )
                     self.games.append( game )
-            self.display_mainmenu()
-        elif resp.command == ProtocolCommand.RNEWGAME:
-            success = resp.args[ 'success' ]
-            if not success:
-                print resp.args[ 'reason' ]
-                return
-            # New Game created, ask player if he wants to start playing it
-            print "New Game Created."
-            self.get_game_list()
-        elif resp.command == ProtocolCommand.RCONTROL:
-            success = resp.args[ 'success' ]
-            if not success:
-                print resp.args[ 'reason' ]
-                return
-            # Player successfully took control of hero
-            print "You are now controlling the %s." % resp.args[ 'type' ]
-            self.get_game_update()
-        elif resp.command == ProtocolCommand.RGAMEUPDATE:
-            success = resp.args[ 'success' ]
-            if not success:
-                print resp.args[ 'reason' ]
-                return
-        else:
-            print "WARNING: Received unsupported message from manager: %s" % inp
-        if self.waiting_for_response:
-            self.resp_cond.release()
-            self.waiting_for_response = False
-            
+                self.display_mainmenu()
+            elif resp.command == ProtocolCommand.RNEWGAME:
+                success = resp.args[ 'success' ]
+                if not success:
+                    print resp.args[ 'reason' ]
+                    return
+                # New Game created, ask player if he wants to start playing it
+                print "New Game Created."
+                self.get_game_list()
+            elif resp.command == ProtocolCommand.RCONTROL:
+                success = resp.args[ 'success' ]
+                if not success:
+                    print resp.args[ 'reason' ]
+                    return
+                # Player successfully took control of hero
+                print "You are now controlling the %s." % resp.args[ 'type' ]
+                self.get_game_update()
+            elif resp.command == ProtocolCommand.RGAMEUPDATE:
+                success = resp.args[ 'success' ]
+                if not success:
+                    print resp.args[ 'reason' ]
+                    return
+            else:
+                print "WARNING: Received unsupported message from manager: %s" % inp
+        finally:
+            if self.waiting_for_response:
+                self.waiting_for_response = False
+                self.resp_cond.release()
+
             
     def get_game_list( self, wait=False ):
         self.debug( "Getting game list" )
-        getGameList = ProtocolCommand( ProtocolCommand.GETGAMES )
-        getGameList.hash = self.hash
+        cmd = ProtocolCommand( ProtocolCommand.GETGAMES )
+        cmd.hash = self.hash
         self.games = None
-        if wait:
-            self.waiting_for_response = True
-        self.send_command( getGameList )
-        if wait:
-            self.resp_cond.acquire()
-        
+        self.send_command( cmd, wait=True )
+
         
     def game_list_updated( self ):
         pass
     
     
     def create_new_dungeon( self ):
-        newDungeon = ProtocolCommand( ProtocolCommand.NEWGAME )
-        newDungeon.hash = self.hash
+        cmd = ProtocolCommand( ProtocolCommand.NEWGAME )
+        cmd.hash = self.hash
         existing_names = [ game.name.lower() for game in self.games ]
-        newDungeon = self.view.populate_new_game_fields( newDungeon, existing_names )
-        self.send_command( newDungeon )
+        cmd = self.view.populate_new_game_fields( cmd, existing_names )
+        self.send_command( cmd )
     
     
     def join_dungeon( self ):
@@ -281,6 +276,8 @@ class AgileDungeonClient:
     
     def play_dungeon( self, game ):
         self.current_game = game
+        if self.current_game.dungeon.current_room is None:
+            self.current_game.dungeon.current_room = self.current_game.dungeon.entrance
         print "Playing %s" % game.name
         print "Entering Dungeon Floor %d" % game.dungeon.depth
         print "Room: %s" % game.dungeon.current_room.name
@@ -315,17 +312,21 @@ class AgileDungeonClient:
         self.send_command( cmd )
 
 
-    def send_command( self, cmd ):
+    def send_command( self, cmd, wait=False ):
         cmdstr = cmd.pack()
+        if wait:
+            self.resp_cond.acquire()
+            self.waiting_for_response = True
         print "Sending '%s'" % cmdstr
         self.sock.send( cmdstr )
-        
+
         
     def handler( self, signum, frame ):
         print 'Caught signal', signum
         self.recvthread._stop = True
         self.recvthread.terminate()
-    
+
+
 if __name__ == "__main__":
     client = AgileDungeonClient()
     signal.signal( signal.SIGINT, client.handler )

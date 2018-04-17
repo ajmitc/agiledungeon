@@ -6,11 +6,14 @@ class Dungeon( object ):
     MIN_ROOMS = 10
     MAX_ROOMS = 40
 
+    ENTRANCE = "Entranece"
+
 
     def __init__( self ):
         self.rooms = []  # The first room is always the Entrance to the dungeon
         self.depth = 1
         self.current_room = None
+        self.entrance = None
         
         
     def build( self, roomfactory, monsterfactory, itemfactory ):
@@ -20,13 +23,13 @@ class Dungeon( object ):
         num_rooms = random.randint( min_rooms, max_rooms )
         # filter rooms appropriate for the current dungeon level
         rooms = roomfactory.get_rooms_for_level( self.depth )
-        entrance = Room( "Entrance", "There is a staircase leading up." )
-        entrance.stairs = Room.UP
-        entrance.x = 0
-        entrance.y = 0
-        self.rooms.append( entrance )
-        self.current_room = entrance
-        self.__visit_room( entrance, 1, num_rooms, rooms, monsterfactory, itemfactory )
+        self.entrance = Room( self.ENTRANCE, "There is a staircase leading up." )
+        self.entrance.stairs = Room.UP
+        self.entrance.x = 0
+        self.entrance.y = 0
+        self.rooms.append( self.entrance )
+        self.current_room = self.entrance
+        self.__visit_room( self.entrance, 1, num_rooms, rooms, monsterfactory, itemfactory )
         print "Dungeon Built"
 
             
@@ -67,9 +70,26 @@ class Dungeon( object ):
         return room
 
 
+    def find_room_by_id( self, id ):
+        id = str(id)
+        for room in self.rooms:
+            if room.id == id:
+                return room
+        return None
+
+
+    def find_room_by_name( self, name ):
+        for room in self.rooms:
+            if room.name == name:
+                return room
+        return None
+
+
     def to_xml( self ):
         elDungeon = ET.Element( "dungeon" )
         elDungeon.set( "depth", str(self.depth) )
+        elDungeon.set( "currentroom", str(self.current_room.id) if self.current_room is not None else "" )
+        elDungeon.set( "entrance", str(self.entrance.id) if self.entrance is not None else "" )
         elRooms = ET.SubElement( elDungeon, "rooms" )
         for room in self.rooms:
             elRoom = room.to_xml()
@@ -86,6 +106,14 @@ class Dungeon( object ):
             room = Room()
             room.from_xml( elRoom )
             self.rooms.append( room )
+        entranceid = xml.get( "entrance" ) if xml.get( "entrance" ) != "" else None
+        currentroomid = xml.get( "currentroom" ) if xml.get( "currentroom" ) else None
+        self.entrance = self.find_room_by_id( entranceid ) if entranceid is not None else None
+        self.current_room = self.find_room_by_id( currentroomid ) if currentroomid is not None else None
+        if self.entrance is None:
+            self.entrance = self.find_room_by_name( self.ENTRANCE )
+        if self.current_room is None:
+            self.current_room = self.entrance
         return True
 
 
